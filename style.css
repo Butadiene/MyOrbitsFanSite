@@ -1,0 +1,784 @@
+  :root {
+    --panel-bg: rgba(12, 16, 28, 0.92);
+    --accent: #6cc5ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #05070f;
+    color: #e9eef7;
+    font-family: "Segoe UI", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+  }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; }
+
+  /* ヘッダー */
+  #header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    padding: 14px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    pointer-events: none;
+    z-index: 5;
+  }
+  #header h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+  }
+  /* タイトル直下：fy_fp7 さんのファンサイト表記 */
+  #header .header-fan {
+    margin: 0;
+    font-size: 11.5px;
+    color: #aebbce;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+  }
+  #header .header-fan a {
+    color: var(--accent); text-decoration: none;
+    border-bottom: 1px dotted rgba(108,197,255,0.5);
+    pointer-events: auto;   /* ヘッダーは pointer-events:none なのでリンクだけ有効化 */
+  }
+  #header .header-fan a:hover { border-bottom-color: var(--accent); }
+  #header .hint {
+    font-size: 12px;
+    color: #9fb0c8;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+  }
+
+  /* コントロールパネル */
+  #controls {
+    position: fixed;
+    top: 14px; right: 18px;
+    display: flex;
+    gap: 8px;
+    z-index: 6;
+  }
+  #controls button {
+    background: var(--panel-bg);
+    color: #cfe0f5;
+    border: 1px solid rgba(108, 197, 255, 0.25);
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    transition: border-color 0.2s, color 0.2s;
+  }
+  #controls button:hover { border-color: var(--accent); color: #fff; }
+  #controls button.active { border-color: var(--accent); color: var(--accent); }
+
+  /* 惑星情報ポップアップ */
+  #popup {
+    position: fixed;
+    top: 50%; right: 24px;
+    transform: translateY(-50%) translateX(120%);
+    width: 400px;
+    max-width: calc(100vw - 40px);
+    max-height: calc(100vh - 48px);   /* 小さいウィンドウでは画面内に収める */
+    display: flex;
+    flex-direction: column;
+    background: var(--panel-bg);
+    border: 1px solid rgba(108, 197, 255, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    backdrop-filter: blur(12px);
+    overflow: hidden;
+    opacity: 0;
+    transition: transform 0.45s cubic-bezier(.22,1,.36,1), opacity 0.35s;
+    z-index: 10;
+  }
+  #popup.show { transform: translateY(-50%) translateX(0); opacity: 1; }
+  #popup .preview {
+    height: min(230px, 40vh);   /* 低いウィンドウではプレビューも縮める */
+    flex: 0 0 auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 50% 40%, #1a2030 0%, #060912 100%);
+    overflow: hidden;
+  }
+  #popup canvas.planet-img {
+    width: 190px; height: 190px;
+    border-radius: 50%;
+    box-shadow: 0 0 50px rgba(0,0,0,0.6), inset -18px -18px 40px rgba(0,0,0,0.55);
+    transition: width 0.3s, height 0.3s;
+  }
+  /* イメージキャラクター（地球・火星など） */
+  #popup .char-img {
+    height: 222px;
+    width: auto;
+    max-width: 50%;
+    object-fit: contain;
+    object-position: bottom;
+    display: none;
+    filter: drop-shadow(0 8px 18px rgba(0,0,0,0.55));
+  }
+  #popup .preview.has-char-img .char-img { display: block; }
+  /* キャラクター画像があるときは惑星を少し小さくして横並びにする（写真が無い天体用） */
+  #popup .preview.has-character { gap: 4px; align-items: flex-end; padding-top: 8px; }
+  #popup .preview.has-character canvas.planet-img { width: 140px; height: 140px; margin-bottom: 30px; }
+
+  /* NASA の惑星写真：プレビュー全面に敷き、キャラ立ち絵を右に重ねる */
+  #popup .planet-photo {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
+    display: none;
+  }
+  #popup .preview.has-photo .planet-photo { display: block; }
+  #popup .preview.has-photo canvas.planet-img { display: none; }
+  #popup .preview.has-photo { justify-content: flex-end; align-items: flex-end; }
+  #popup .preview.has-photo .char-img { position: relative; z-index: 1; margin-right: 6px; }
+  #popup .badge {
+    position: absolute;
+    top: 12px; left: 14px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: #9fb0c8;
+    text-transform: uppercase;
+  }
+  #popup .body { padding: 18px 20px 22px; flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  #popup h2 { margin: 0 0 2px; font-size: 22px; }
+  #popup .subtitle { color: var(--accent); font-size: 13px; margin-bottom: 12px; }
+  #popup p { margin: 0 0 14px; font-size: 13.5px; line-height: 1.7; color: #d4ddec; }
+  #popup .facts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 14px;
+    font-size: 12px;
+  }
+  #popup .facts div { display: flex; flex-direction: column; gap: 2px; }
+  #popup .facts .label { color: #8195af; font-size: 10.5px; letter-spacing: 0.05em; }
+  #popup .facts .value { color: #eef3fb; font-weight: 600; }
+  /* キャラクター紹介（性格・設定）— 吹き出し風のカード */
+  #popup .char-desc {
+    display: none;
+    margin-top: 16px;
+    padding: 12px 14px;
+    background: linear-gradient(180deg, rgba(108,197,255,0.10), rgba(108,197,255,0.04));
+    border: 1px solid rgba(108,197,255,0.22);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+  }
+  #popup .char-desc.show { display: block; }
+  #popup .char-desc .cd-label {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  #popup .char-desc .cd-text {
+    margin: 0;
+    font-size: 13px; line-height: 1.75; color: #e7eef8;
+  }
+  /* キャラクターのセリフ（「」付きで、解説とは区別して見せる） */
+  #popup .char-desc .cd-quote {
+    margin: 10px 0 0;
+    padding-top: 9px;
+    border-top: 1px dashed rgba(108,197,255,0.25);
+    font-size: 13.5px; line-height: 1.7; font-weight: 600;
+    color: #cfe6ff;
+  }
+  #popup .char-desc .cd-quote:empty { display: none; }
+  #popup .char-desc .cd-quote::before { content: '「'; }
+  #popup .char-desc .cd-quote::after { content: '」'; }
+  #popup .close {
+    position: absolute;
+    top: 10px; right: 12px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.08);
+    color: #cfe0f5;
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  #popup .close:hover { background: rgba(255,255,255,0.18); }
+  /* スマホ用の「閉じる」ボタン（PCでは非表示。メディアクエリで表示する） */
+  #popup .close-mobile { display: none; }
+
+  /* 惑星選択時に左側へ大きく半透明で表示するキャラクター */
+  /* Pretendard（大きな名前表示用フォント） */
+  .pretendard {
+    font-family: "Pretendard Variable JP", "Pretendard JP", "Pretendard",
+                 "Noto Sans JP", "Hiragino Sans", system-ui, sans-serif;
+  }
+  .black { font-weight: 900; }
+  .semibold { font-weight: 600; }
+
+  /* 惑星選択時：左の大きな立ち絵＋名前（PCのみ。decor.js が .show を付け外し） */
+  #decor {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 4;
+  }
+  /* 立ち絵：下からスプリング風にせり上がる。右端はマスクでフェードして背景に溶け込ませる */
+  #tachie {
+    position: fixed;
+    left: -1vw; bottom: 0;
+    height: min(98vh, 132vw);
+    width: auto;
+    object-fit: contain;
+    object-position: left bottom;
+    filter: drop-shadow(0 12px 40px rgba(0,0,0,0.55));
+    transform: translateY(112%);
+    transition: transform 0.95s cubic-bezier(.16,1.06,.3,1);  /* 少し行き過ぎる＝spring風 */
+    /* 3D描画でメインスレッドが忙しいので、コンポジタ層に載せて滑らかに動かす */
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-mask-image: linear-gradient(to right, #000 0%, #000 52%, transparent 84%);
+            mask-image: linear-gradient(to right, #000 0%, #000 52%, transparent 84%);
+  }
+  #decor.show #tachie { transform: translateY(0); }
+
+  /* 左下の大きな名前（ローマ字＋漢字）。左からスライドイン */
+  #decor #name-romaji,
+  #decor #name-kanji {
+    position: fixed;
+    left: 0;
+    line-height: 0.9;
+    white-space: nowrap;
+    text-shadow: 0 6px 28px rgba(0,0,0,0.6);
+    transform: translateX(-75vw);
+    transition: transform 0.55s cubic-bezier(.22,1,.36,1);
+    will-change: transform;
+  }
+  #decor #name-romaji {
+    bottom: calc(2vw + clamp(54px, 11vw, 168px));
+    padding-left: 5vw;
+    font-size: clamp(26px, 7.5vw, 120px);
+    color: var(--accent);
+    transition-delay: 0.08s;
+  }
+  #decor #name-kanji {
+    bottom: 2vw;
+    padding-left: 3vw;
+    font-size: clamp(40px, 11vw, 170px);
+    color: #f3f7ff;
+  }
+  #decor.show #name-romaji,
+  #decor.show #name-kanji { transform: translateX(0); }
+
+  /* ローディング */
+  #loading {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: #05070f;
+    color: #6cc5ff;
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    z-index: 50;
+    transition: opacity 0.6s;
+  }
+  #loading.hide { opacity: 0; pointer-events: none; }
+
+  /* テクスチャのライセンス表記 */
+  /* 右下のツールバー（クレジット＋速度を横並び。各パネルはボタンの上に開く） */
+  #tools {
+    position: fixed;
+    right: 16px; bottom: 14px;
+    z-index: 8;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  #credit {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  /* クレジットを開くボタン（普段はこれだけ表示） */
+  #btn-credit {
+    padding: 5px 11px;
+    font-size: 11px;
+    color: #a9b8cf;
+    background: rgba(20,26,40,0.55);
+    border: 1px solid rgba(108,197,255,0.22);
+    border-radius: 999px;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    opacity: 0.6;
+    transition: opacity 0.2s, border-color 0.2s, color 0.2s;
+  }
+  #btn-credit:hover { opacity: 1; border-color: var(--accent); color: #fff; }
+  #btn-credit.active { opacity: 1; border-color: var(--accent); color: var(--accent); }
+  /* 開いたときに出るクレジット本文 */
+  #credit-panel {
+    max-width: min(520px, calc(100vw - 28px));
+    padding: 11px 13px;
+    font-size: 11px;
+    line-height: 1.7;
+    color: #aebbce;
+    background: rgba(16,22,36,0.86);
+    border: 1px solid rgba(108,197,255,0.28);
+    border-radius: 10px;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px);
+  }
+  #credit-panel[hidden] { display: none; }
+  #credit a { color: #9fb0c8; text-decoration: none; border-bottom: 1px dotted rgba(159,176,200,0.5); }
+  #credit a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* 「現在の配置」モードの日時パネル（画面上部中央） */
+  #real-panel {
+    position: fixed;
+    top: 62px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 7;
+    width: min(420px, calc(100vw - 24px));
+    padding: 12px 14px 11px;
+    color: #cfe0f5;
+    background: rgba(16,22,36,0.82);
+    border: 1px solid rgba(108,197,255,0.3);
+    border-radius: 14px;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px);
+    text-align: center;
+  }
+  #real-panel[hidden] { display: none; }
+  #real-panel .rp-top {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-bottom: 9px;
+  }
+  #real-panel .rp-date { font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
+  #real-panel input[type="datetime-local"] {
+    font-size: 12px; color: #eaf3ff;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(108,197,255,0.3);
+    border-radius: 7px; padding: 4px 7px;
+    color-scheme: dark;
+  }
+  #real-panel #real-now {
+    font-size: 11.5px; color: #cdd8ea; cursor: pointer;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(108,197,255,0.3);
+    border-radius: 7px; padding: 5px 11px;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  #real-panel #real-now:hover { border-color: var(--accent); color: #fff; }
+  #real-panel #real-offset { width: 100%; accent-color: var(--accent); cursor: pointer; }
+  #real-panel .rp-when { font-size: 12.5px; font-weight: 700; color: var(--accent); margin-top: 7px; }
+  #real-panel .rp-note { font-size: 10.5px; color: #93a4bd; line-height: 1.4; margin-top: 4px; }
+
+  /* 速度調整：画面右下に控えめに配置。ボタンでスライダーパネルを開閉する */
+  #speed-control {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  #speed-toggle {
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #a9b8cf;
+    background: rgba(20,26,40,0.55);
+    border: 1px solid rgba(108,197,255,0.22);
+    border-radius: 999px;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    opacity: 0.5;
+    transition: opacity 0.2s, border-color 0.2s, color 0.2s;
+  }
+  #speed-toggle:hover { opacity: 1; border-color: var(--accent); color: #fff; }
+  #speed-toggle.active { opacity: 1; border-color: var(--accent); color: var(--accent); }
+  #speed-panel {
+    width: 210px;
+    padding: 14px;
+    background: var(--panel-bg);
+    border: 1px solid rgba(108,197,255,0.3);
+    border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.55);
+    backdrop-filter: blur(12px);
+  }
+  #speed-panel[hidden] { display: none; }
+  #speed-panel .sp-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 10px;
+  }
+  #speed-panel .sp-label { font-size: 12px; color: #cdd8ea; letter-spacing: 0.04em; }
+  #speed-panel #speed-value { font-size: 13px; font-weight: 700; color: var(--accent); }
+  #speed-range {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  #speed-reset {
+    margin-top: 12px;
+    width: 100%;
+    padding: 7px;
+    font-size: 11.5px;
+    color: #a9b8cf;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(108,197,255,0.22);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  #speed-reset:hover { border-color: var(--accent); color: #fff; }
+
+  /* ツールチップ（ホバー時の惑星名） */
+  #tooltip {
+    position: fixed;
+    padding: 4px 9px;
+    background: rgba(0,0,0,0.78);
+    border: 1px solid rgba(108,197,255,0.4);
+    border-radius: 6px;
+    font-size: 12px;
+    color: #e9eef7;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -140%);
+    transition: opacity 0.15s;
+    white-space: nowrap;
+    z-index: 8;
+  }
+
+  /* スタートページ */
+  #start-screen {
+    position: fixed; inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(20px, 4vh, 48px);
+    padding: 24px;
+    background:
+      radial-gradient(circle at 50% 30%, #121a30 0%, #070a14 55%, #04060d 100%);
+    transition: opacity 0.7s ease;
+  }
+  #start-screen.hide { opacity: 0; pointer-events: none; }
+  #start-screen .start-title {
+    margin: 0;
+    font-size: clamp(40px, 9vw, 104px);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    background: linear-gradient(180deg, #eaf3ff 0%, #6cc5ff 70%, #3a7bd5 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 8px 40px rgba(108,197,255,0.25);
+    opacity: 0;
+    transform: translateY(16px);
+    animation: startFade 0.9s cubic-bezier(.22,1,.36,1) forwards;
+  }
+  #start-screen .start-sub {
+    margin: -4px 0 0;
+    font-size: clamp(11px, 2.6vw, 14px);
+    letter-spacing: 0.04em;
+    color: #9fb0c8;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(14px);
+    animation: startFade 0.9s cubic-bezier(.22,1,.36,1) 0.12s forwards;
+  }
+  #start-screen .start-chars {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: center;
+    gap: clamp(2px, 0.8vw, 14px);
+    max-width: 1180px;
+  }
+  #start-screen .start-chars img {
+    height: clamp(120px, 24vh, 250px);
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 10px 26px rgba(0,0,0,0.55));
+    opacity: 0;
+    transform: translateY(26px);
+    animation: startFade 0.7s cubic-bezier(.22,1,.36,1) forwards;
+    /* animation-delay は JS でずらして順番に出す */
+  }
+  #start-screen .start-btn {
+    padding: 14px 38px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: #eaf3ff;
+    background: linear-gradient(180deg, rgba(108,197,255,0.22), rgba(108,197,255,0.08));
+    border: 1px solid rgba(108,197,255,0.5);
+    border-radius: 999px;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    opacity: 0;
+    transform: translateY(16px);
+    animation: startFade 0.8s cubic-bezier(.22,1,.36,1) forwards;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+  }
+  #start-screen .start-btn:hover {
+    background: linear-gradient(180deg, rgba(108,197,255,0.34), rgba(108,197,255,0.14));
+    border-color: var(--accent);
+    transform: translateY(13px);
+  }
+  @keyframes startFade {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ======================= 「このサイトについて」全画面オーバーレイ ======================= */
+  /* 枠のあるモーダルではなく、スタート画面と同じ星空の世界として全画面で見せる */
+  #lore-screen {
+    position: fixed; inset: 0;
+    z-index: 120;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: clamp(54px, 10vh, 120px) 24px calc(56px + env(safe-area-inset-bottom));
+    background:
+      radial-gradient(circle at 50% 26%, #141d33 0%, #080c18 55%, #04060d 100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.55s ease;
+  }
+  #lore-screen.show { opacity: 1; pointer-events: auto; }
+  /* 星空（細かな点を散らす装飾レイヤー） */
+  #lore-screen::before {
+    content: '';
+    position: fixed; inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(1.4px 1.4px at 12% 18%, rgba(255,255,255,0.8), transparent),
+      radial-gradient(1.2px 1.2px at 28% 62%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1.6px 1.6px at 44% 30%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(1.1px 1.1px at 62% 74%, rgba(255,255,255,0.45), transparent),
+      radial-gradient(1.5px 1.5px at 78% 22%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(1.2px 1.2px at 88% 58%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1.1px 1.1px at 8% 80%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1.3px 1.3px at 54% 90%, rgba(255,255,255,0.4), transparent),
+      radial-gradient(1.2px 1.2px at 70% 44%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1.4px 1.4px at 34% 8%, rgba(255,255,255,0.6), transparent);
+    opacity: 0.55;
+  }
+  #lore-screen .lore-card {
+    position: relative;
+    z-index: 1;
+    width: min(640px, 100%);
+    margin: auto;       /* 内容が短いときは縦中央、長いときは上詰めでスクロール */
+    text-align: center;
+    background: none; border: none; box-shadow: none; padding: 0;
+  }
+  /* 開くたびに頭から再生する各行のフェードイン（JS が animation-delay を割り当てる） */
+  #lore-screen .lore-anim {
+    opacity: 0;
+    transform: translateY(18px);
+    animation: loreRise 0.8s cubic-bezier(.22,1,.36,1) forwards;
+  }
+  @keyframes loreRise { to { opacity: 1; transform: translateY(0); } }
+
+  #lore-screen .lore-eyebrow {
+    font-size: clamp(28px, 6.4vw, 50px);
+    font-weight: 700; letter-spacing: 0.06em;
+    background: linear-gradient(180deg, #eaf3ff 0%, #6cc5ff 72%, #3a7bd5 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 8px 40px rgba(108,197,255,0.22);
+    margin: 0 0 28px;
+  }
+  #lore-screen .lore-body p {
+    margin: 0 auto 16px;
+    max-width: 560px;
+    font-size: clamp(13.5px, 2.6vw, 15.5px); line-height: 2.0; color: #dbe5f3;
+  }
+  #lore-screen .lore-body p:last-child { margin-bottom: 0; }
+  #lore-screen .lore-body em {
+    font-style: normal; font-weight: 700; color: #cfe6ff;
+  }
+  #lore-screen .lore-body a {
+    color: var(--accent); text-decoration: none;
+    border-bottom: 1px dotted rgba(108,197,255,0.6);
+  }
+  #lore-screen .lore-body a:hover { border-bottom-style: solid; }
+  /* 物語パートの見出し（Myorbits. 世界について）— 上に細い光の区切り線 */
+  #lore-screen .lore-body .lore-h {
+    position: relative;
+    margin: 40px 0 18px;
+    padding-top: 28px;
+    font-size: clamp(15px, 3.2vw, 19px); font-weight: 700; letter-spacing: 0.06em;
+    color: var(--accent);
+  }
+  #lore-screen .lore-body .lore-h::before {
+    content: '';
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 64px; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(108,197,255,0.65), transparent);
+  }
+  /* 閉じる（✕）は画面右上に固定して常に届く位置に */
+  #lore-screen .lore-close {
+    position: fixed;
+    top: calc(14px + env(safe-area-inset-top)); right: 16px;
+    z-index: 2;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(108,197,255,0.3);
+    background: rgba(10,14,24,0.5);
+    color: #cdd8ea; font-size: 15px; cursor: pointer;
+    backdrop-filter: blur(6px);
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+  }
+  #lore-screen .lore-close:hover { border-color: var(--accent); color: #fff; background: rgba(10,14,24,0.7); }
+  #lore-screen .lore-ok {
+    display: block;
+    margin: 30px auto 0;
+    padding: 12px 38px;
+    font-size: 14px; font-weight: 600; letter-spacing: 0.06em;
+    color: #eaf3ff;
+    background: linear-gradient(180deg, rgba(108,197,255,0.22), rgba(108,197,255,0.08));
+    border: 1px solid rgba(108,197,255,0.5);
+    border-radius: 999px;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    transition: background 0.2s, border-color 0.2s;
+  }
+  #lore-screen .lore-ok:hover {
+    background: linear-gradient(180deg, rgba(108,197,255,0.34), rgba(108,197,255,0.14));
+    border-color: var(--accent);
+  }
+
+  /* 集合絵：太陽を中心に、惑星キャラが重なり合って集合している様子 */
+  #lore-screen .lore-scene {
+    position: relative;
+    width: min(680px, 100%);
+    margin: 34px auto 0;
+    height: clamp(220px, 46vw, 320px);
+    /* 太陽の中心あたりにほんのり光を置いて“中心感”を出す */
+    background: radial-gradient(closest-side at 50% 64%, rgba(255,196,90,0.18), rgba(255,196,90,0) 70%);
+  }
+  #lore-screen .lore-scene .ls {
+    position: absolute;
+    width: auto;
+    object-fit: contain;
+    transform-origin: bottom center;
+    /* 各キャラの基準位置・回転（--r）は個別指定。ふわふわ揺れるアニメ付き */
+    transform: translateX(-50%) rotate(var(--r, 0deg));
+    animation: lsBob var(--dur, 3.6s) ease-in-out var(--delay, 0s) infinite;
+    filter: drop-shadow(0 8px 14px rgba(0,0,0,0.5));
+  }
+  @keyframes lsBob {
+    0%, 100% { transform: translateX(-50%) rotate(var(--r, 0deg)) translateY(0); }
+    50%      { transform: translateX(-50%) rotate(var(--r, 0deg)) translateY(-7px); }
+  }
+  /* 太陽：中心・最背面寄り・いちばん大きい */
+  #lore-screen .ls-sun     { left: 50%; bottom: 12%; height: 64%; z-index: 2; --r: 0deg;  --dur: 4.4s; --delay: 0s; }
+  /* 後列（少し上・小さめ） */
+  #lore-screen .ls-pluto   { left: 30%; bottom: 24%; height: 37%; z-index: 1; --r: -5deg; --dur: 4.0s; --delay: .6s; }
+  #lore-screen .ls-neptune { left: 70%; bottom: 23%; height: 39%; z-index: 1; --r: 5deg;  --dur: 3.8s; --delay: .9s; }
+  /* 中列 */
+  #lore-screen .ls-mercury { left: 14%; bottom: 2%;  height: 42%; z-index: 3; --r: -8deg; --dur: 3.4s; --delay: .2s; }
+  #lore-screen .ls-uranus  { left: 86%; bottom: 1%;  height: 44%; z-index: 3; --r: 9deg;  --dur: 4.2s; --delay: .4s; }
+  #lore-screen .ls-venus   { left: 26%; bottom: 5%;  height: 46%; z-index: 4; --r: -6deg; --dur: 3.6s; --delay: .8s; }
+  #lore-screen .ls-saturn  { left: 75%; bottom: 4%;  height: 48%; z-index: 4; --r: 7deg;  --dur: 3.9s; --delay: .1s; }
+  /* 前列（手前・大きめ・太陽の前に重なる） */
+  #lore-screen .ls-earth   { left: 38%; bottom: 0;   height: 50%; z-index: 5; --r: -4deg; --dur: 3.5s; --delay: .5s; }
+  #lore-screen .ls-jupiter { left: 62%; bottom: 0;   height: 56%; z-index: 5; --r: 5deg;  --dur: 4.1s; --delay: .3s; }
+  #lore-screen .ls-mars    { left: 50%; bottom: 0;   height: 52%; z-index: 6; --r: 3deg;  --dur: 3.7s; --delay: .7s; }
+
+  /* 動きを抑える設定の利用者には揺れを止める */
+  @media (prefers-reduced-motion: reduce) {
+    #lore-screen .lore-scene .ls { animation: none; }
+  }
+
+  /* ======================= スマホ・狭い画面向け ======================= */
+  @media (max-width: 640px) {
+    /* ヘッダー：タイトルを小さく、操作ヒント（マウス前提）は隠す */
+    #header { padding: calc(8px + env(safe-area-inset-top)) 12px 8px; gap: 8px; }
+    #header h1 { font-size: 15px; }
+    #header .hint { display: none; }
+
+    /* コントロール：ヘッダーの下に回り込ませ、折り返し可能にする */
+    #controls {
+      top: calc(42px + env(safe-area-inset-top));
+      right: calc(8px + env(safe-area-inset-right));
+      left: auto;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      max-width: calc(100vw - 16px);
+    }
+    #controls button { padding: 6px 9px; font-size: 11px; border-radius: 7px; }
+
+    /* ポップアップ：画面下から せり上がる ボトムシートにする */
+    #popup {
+      top: auto; bottom: 0; left: 0; right: 0;
+      width: 100%; max-width: 100%;
+      max-height: 80vh;
+      border-radius: 18px 18px 0 0;
+      transform: translateY(110%);
+      display: flex; flex-direction: column;
+      transition: transform 0.42s cubic-bezier(.22,1,.36,1), opacity 0.3s;
+    }
+    #popup.show { transform: translateY(0); }
+    /* プレビュー（キャラ・惑星表示エリア）は大きめに。本文はスクロールするので余裕がある */
+    #popup .preview { height: clamp(200px, 36vh, 300px); flex: 0 0 auto; }
+    #popup .body { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    #popup canvas.planet-img { width: 150px; height: 150px; }
+    #popup .preview.has-character canvas.planet-img { width: clamp(110px, 22vw, 140px); height: clamp(110px, 22vw, 140px); margin-bottom: 26px; }
+    /* キャラ立ち絵はプレビュー高に追従させ、スマホでもしっかり見えるサイズに */
+    #popup .char-img { height: clamp(196px, 35vh, 296px); max-width: 60%; }
+    #popup .preview.has-photo .char-img { max-width: 52%; }
+    /* シート下部に固定される全幅の「閉じる」ボタン（本文スクロールの外なので常に見える） */
+    #popup .close-mobile {
+      display: block;
+      flex: 0 0 auto;
+      width: 100%;
+      padding: 15px;
+      padding-bottom: calc(15px + env(safe-area-inset-bottom));
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: #eaf3ff;
+      background: rgba(108,197,255,0.16);
+      border: none;
+      border-top: 1px solid rgba(108,197,255,0.28);
+      cursor: pointer;
+    }
+    #popup .close-mobile:active { background: rgba(108,197,255,0.28); }
+    /* 下部ボタンがあるので、右上の小さな ✕ はスマホでは隠す */
+    #popup .close { display: none; }
+
+    /* 左の大きな立ち絵＋名前は下シートの裏に隠れてしまうので、スマホでは非表示。
+       （キャラ絵はポップアップ内のプレビューに出るので情報は失われない） */
+    #decor { display: none; }
+
+    /* 右下ツールバー：画面端に寄せる。各パネルは画面幅に収める */
+    #tools {
+      right: 10px;
+      bottom: calc(8px + env(safe-area-inset-bottom));
+    }
+    #credit-panel { font-size: 10px; line-height: 1.6; max-width: calc(100vw - 20px); }
+    #speed-panel { width: min(220px, calc(100vw - 20px)); }
+
+    /* 「現在の配置」パネル：上部のボタン群と重なるので下側に回す */
+    #real-panel {
+      top: auto;
+      bottom: calc(100px + env(safe-area-inset-bottom));
+      width: calc(100vw - 20px);
+    }
+    #real-panel .rp-top { flex-wrap: wrap; }
+
+    /* スタートページ：縦に収まらなければスクロール、立ち絵は小さめに */
+    #start-screen {
+      gap: 16px;
+      padding: 8vh 14px calc(24px + env(safe-area-inset-bottom));
+      justify-content: flex-start;
+      overflow-y: auto;
+    }
+    #start-screen .start-chars { gap: 4px; max-width: 100%; }
+    #start-screen .start-chars img { height: clamp(84px, 15vh, 150px); }
+    #start-screen .start-btn { padding: 13px 34px; }
+  }

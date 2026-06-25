@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>My Orbits Fan Site</title>
+<meta name="description" content="@fy_fp7 さんのオリジナル創作「Myorbits.」非公式ファンサイト。Three.js 製の太陽系 3D ビューワーで、惑星をクリックするとイメージキャラクターと解説が見られます。" />
+<meta name="theme-color" content="#04060d" />
+<link rel="canonical" href="https://butadiene.github.io/Solar-simple-viewer/" />
+
+<!-- ファビコン（fy_fp7 氏提供の earth キャラクターを使用） -->
+<link rel="icon" type="image/png" sizes="180x180" href="apple-touch-icon.png" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+
+<!-- OGP（X / Facebook 等の共有カード） -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="My Orbits Fan Site" />
+<meta property="og:title" content="My Orbits Fan Site｜@fy_fp7「Myorbits.」非公式ファンサイト" />
+<meta property="og:description" content="@fy_fp7 さんのオリジナル創作「Myorbits.」非公式ファンサイト。太陽系を 3D で巡り、惑星のキャラクターと世界観を楽しめます。" />
+<meta property="og:url" content="https://butadiene.github.io/Solar-simple-viewer/" />
+<meta property="og:image" content="https://butadiene.github.io/Solar-simple-viewer/ogp.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:locale" content="ja_JP" />
+
+<!-- Twitter カード -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="My Orbits Fan Site｜@fy_fp7「Myorbits.」非公式ファンサイト" />
+<meta name="twitter:description" content="太陽系を 3D で巡り、惑星のキャラクターと世界観を楽しめる「Myorbits.」非公式ファンサイト。" />
+<meta name="twitter:image" content="https://butadiene.github.io/Solar-simple-viewer/ogp.png" />
+
+<!-- Pretendard JP（見出し・大きな名前表示に使用。失敗時は Noto Sans JP 等にフォールバック） -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable-jp.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app"></div>
+
+  <div id="header">
+    <h1>🪐 My Orbits Fan Site</h1>
+    <p class="header-fan">@<a href="https://x.com/fy_fp7" target="_blank" rel="noopener">fy_fp7</a> さんのオリジナル創作「Myorbits.」非公式ファンサイト</p>
+    <span class="hint">ドラッグで回転 / ホイールでズーム / 惑星をクリックで詳細</span>
+  </div>
+
+  <div id="controls">
+    <button id="btn-home">ホーム</button>
+    <button id="btn-lore">このサイトについて</button>
+    <button id="btn-real" title="今この瞬間の実際の公転位置・自転軸の向きに合わせる">現在の配置</button>
+    <button id="btn-scale" title="太陽からの距離を実スケールにする（天体の大きさは表示用）">実スケール距離</button>
+    <button id="btn-pause">⏸ 一時停止</button>
+    <button id="btn-orbits" class="active">軌道線</button>
+    <button id="btn-labels" class="active">名前</button>
+    <button id="btn-moons" class="active">衛星</button>
+    <button id="btn-clouds" class="active">雲・大気</button>
+  </div>
+
+  <!-- 「現在の配置」モードの日時指定・時間送りパネル -->
+  <div id="real-panel" hidden>
+    <div class="rp-top">
+      <label class="rp-date">日時
+        <input type="datetime-local" id="real-date" />
+      </label>
+      <button id="real-now" type="button">今</button>
+    </div>
+    <input type="range" id="real-offset" min="-3650" max="3650" step="1" value="0" aria-label="時間送り（日）" />
+    <div class="rp-when">表示中：<span id="real-when"></span></div>
+    <div class="rp-note">公転位置・自転軸の向きのみ実データ／距離・大きさは表示用</div>
+  </div>
+
+  <div id="tooltip"></div>
+
+  <!-- PC のみ：左側の大きな立ち絵＋名前（decor.js が制御。スマホでは非表示） -->
+  <div id="decor" aria-hidden="true">
+    <img id="tachie" alt="" />
+    <div id="name-romaji" class="pretendard semibold"></div>
+    <div id="name-kanji" class="pretendard black"></div>
+  </div>
+
+  <!-- 右下のツールバー：クレジット・速度を横並びに（パネルは各ボタンの上に開く） -->
+  <div id="tools">
+    <div id="credit">
+      <div id="credit-panel" hidden>
+        テクスチャ：
+        <a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noopener">Solar System Scope</a>
+        （<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>）
+        ／冥王星・ガリレオ衛星：<a href="https://www.nasa.gov/" target="_blank" rel="noopener">NASA</a>（Public Domain）
+        ／惑星写真（ポップアップ）：<a href="https://www.nasa.gov/" target="_blank" rel="noopener">NASA</a>（Public Domain）
+        <br />
+        カロン：Image credit: NASA/Johns Hopkins University Applied Physics Laboratory/Southwest Research Institute
+        <br />
+        キャラクター（イラスト・原作）・サイトアイコン／OGP画像：&copy; <a href="https://lit.link/fyfp" target="_blank" rel="noopener">fy_fp7</a> ／原作者様のご厚意により当サイト限定で掲載。転載・再配布はご遠慮ください。
+        ／キャラクター説明文：<a href="https://x.com/yellow_tulip013" target="_blank" rel="noopener">yellow_tulip013</a>
+        <br />
+        ディレクション：<a href="https://x.com/yellow_tulip013" target="_blank" rel="noopener">yellow_tulip013</a>
+        ／Webサイト作成：Butadiene ／コード提供・実装協力：<a href="https://x.com/pseudocardiac" target="_blank" rel="noopener">42</a>
+      </div>
+      <button id="btn-credit" type="button" aria-expanded="false" aria-controls="credit-panel">クレジット</button>
+    </div>
+
+    <!-- 速度調整（ボタンを押すとスライダーが現れる） -->
+    <div id="speed-control">
+      <div id="speed-panel" hidden>
+        <div class="sp-row">
+          <span class="sp-label">公転スピード</span>
+          <span id="speed-value">×1.0</span>
+        </div>
+        <input id="speed-range" type="range" min="0" max="1000" step="1" value="434"
+               aria-label="惑星の公転スピード（対数）" />
+        <button id="speed-reset" type="button">リセット</button>
+      </div>
+      <button id="speed-toggle" type="button" aria-expanded="false" aria-controls="speed-panel"
+              title="惑星の速度を調整">⚙ 速度</button>
+    </div>
+  </div>
+
+  <div id="popup" aria-live="polite">
+    <button class="close" aria-label="閉じる">✕</button>
+    <div class="preview">
+      <img class="planet-photo" alt="" />
+      <span class="badge"></span>
+      <canvas class="planet-img" width="300" height="300"></canvas>
+      <img class="char-img" alt="" />
+    </div>
+    <div class="body">
+      <h2></h2>
+      <div class="subtitle"></div>
+      <p></p>
+      <div class="facts"></div>
+      <div class="char-desc">
+        <p class="cd-text"></p>
+        <p class="cd-quote"></p>
+      </div>
+    </div>
+    <button class="close-mobile" type="button">閉じる</button>
+  </div>
+
+  <div id="loading">太陽系を生成中…</div>
+
+  <!-- 「このサイトについて」（ファンサイトの説明＋Myorbits の世界設定）オーバーレイ -->
+  <div id="lore-screen" aria-hidden="true">
+    <div class="lore-card" role="dialog" aria-modal="true" aria-label="このサイトについて">
+      <button class="lore-close" type="button" aria-label="閉じる">✕</button>
+      <div class="lore-eyebrow lore-anim">このサイトについて</div>
+      <div class="lore-body">
+        <p class="lore-anim">このサイトは <a href="https://x.com/fy_fp7" target="_blank" rel="noopener">@fy_fp7</a> 様のオリジナル創作「<em>Myorbits.</em>」のファンサイトです。</p>
+        <p class="lore-anim">作品の紹介と応援を目的として、ファンが運営しています。</p>
+        <p class="lore-anim">掲載しているイラストは、原作者様ご本人のご厚意により、<em>当サイト限定で掲載許可</em>をいただいています。イラストおよび原作に関する権利は原作者様に帰属します。掲載イラストの転載・再配布はご遠慮ください。</p>
+
+        <h3 class="lore-h lore-anim">Myorbits. 世界について</h3>
+        <p class="lore-anim">どこかの宇宙のどこかの銀河、どこかの太陽系で…<br />惑星たちが定例会議を始めます。</p>
+        <p class="lore-anim">彼らが太陽から授けられた任務は、<em>「生命の発芽と保護」</em>。</p>
+        <p class="lore-anim">40億年前に地球で芽吹いた生命を維持するため、惑星たちは広大な太陽系を漂う様々な天体を監視し、会議で報告しています。</p>
+        <p class="lore-anim">しかし、全員が真面目に会議に参加しているかというと…？</p>
+      </div>
+
+      <!-- 太陽を中心にキャラが集合してわちゃわちゃしている集合絵 -->
+      <div class="lore-scene lore-anim" aria-hidden="true">
+        <img class="ls ls-pluto"   src="character_images/pluto.png"   alt="" />
+        <img class="ls ls-neptune" src="character_images/neptune.png" alt="" />
+        <img class="ls ls-sun"     src="character_images/sun.png"     alt="" />
+        <img class="ls ls-mercury" src="character_images/mercury.png" alt="" />
+        <img class="ls ls-uranus"  src="character_images/uranus.png"  alt="" />
+        <img class="ls ls-venus"   src="character_images/venus.png"   alt="" />
+        <img class="ls ls-saturn"  src="character_images/saturn.png"  alt="" />
+        <img class="ls ls-earth"   src="character_images/earth.png"   alt="" />
+        <img class="ls ls-jupiter" src="character_images/jupiter.png" alt="" />
+        <img class="ls ls-mars"    src="character_images/mars.png"    alt="" />
+      </div>
+
+      <button class="lore-ok lore-anim" type="button">閉じる</button>
+    </div>
+  </div>
+
+  <!-- スタートページ（ビューワー表示前） -->
+  <div id="start-screen">
+    <h1 class="start-title">My Orbits</h1>
+    <p class="start-sub">@fy_fp7 さんのオリジナル創作「Myorbits.」非公式ファンサイト</p>
+    <div class="start-chars"></div>
+    <button class="start-btn" type="button">ビューワーを表示</button>
+  </div>
+
+  <script>
+    // スタートページ：キャラクター立ち絵を順番にフェードで並べ、ボタンでビューワーへ。
+    // 「ホーム」ボタンで再表示でき、その都度フェードアニメーションをやり直す。
+    // （Three.js とは独立して即時に動かすため、module ではなく通常スクリプトにしている）
+    (function () {
+      const startScreen = document.getElementById('start-screen');
+      const charsRow = startScreen.querySelector('.start-chars');
+      const startBtn = startScreen.querySelector('.start-btn');
+      const title = startScreen.querySelector('.start-title');
+      const homeBtn = document.getElementById('btn-home');
+
+      // 太陽からの距離順に並べる
+      const LINEUP = [
+        ['sun', '太陽'], ['mercury', '水星'], ['venus', '金星'], ['earth', '地球'],
+        ['mars', '火星'], ['jupiter', '木星'], ['saturn', '土星'],
+        ['uranus', '天王星'], ['neptune', '海王星'], ['pluto', '冥王星'],
+      ];
+
+      const BASE = 0.25;  // 立ち絵が出始めるまでの待ち(秒)
+      const STEP = 0.13;  // 1体ごとの遅延(秒)
+
+      // CSS アニメーションを頭から再生し直す（一度 none にして reflow を挟む）
+      function restartAnim(el, delay) {
+        el.style.animation = 'none';
+        void el.offsetWidth;
+        el.style.animation = '';
+        el.style.animationDelay = delay;
+      }
+
+      // playIntro が再実行（ホーム再表示）された場合に、古い await を無効化する世代カウンタ
+      let introSeq = 0;
+
+      // Promise にタイムアウトを付ける（ネットワークが遅くても永遠に待たないため）
+      function withTimeout(p, ms) {
+        return Promise.race([p, new Promise((res) => setTimeout(res, ms))]);
+      }
+
+      // 立ち絵を組み直して順番にフェードイン。タイトル・ボタンのアニメも頭から再生。
+      // ポイント：全画像のデコードを待ってから一斉にアニメーションを開始することで、
+      //          読み込み途中の再レイアウトやデコードによるカクつきを防ぐ。
+      async function playIntro() {
+        const seq = ++introSeq;
+        restartAnim(title, '0s');
+        startBtn.style.animation = 'none';   // デコード完了までボタンも隠しておく
+        charsRow.innerHTML = '';
+
+        // まず全立ち絵を（非表示のまま）配置する。デコード完了まではアニメを止めておく。
+        const imgs = LINEUP.map(([key, name]) => {
+          const img = document.createElement('img');
+          img.src = `character_images/${key}.png`;
+          img.alt = `${name}のキャラクター`;
+          img.style.animation = 'none';   // デコードが終わるまで再生しない（opacity:0 のまま）
+          // 画像が無い環境（万一の取得失敗）では並びから取り除く
+          img.onerror = () => img.remove();
+          charsRow.appendChild(img);
+          return img;
+        });
+
+        // すべての立ち絵のデコードを待つ（失敗・遅延しても全体を止めない）
+        await Promise.all(imgs.map((img) => withTimeout(img.decode().catch(() => {}), 2000)));
+        if (seq !== introSeq) return;     // 待機中にやり直された場合は中断
+
+        // 出そろったので一斉にフェードを開始（CSS の遅延で順番に見せる）
+        imgs.forEach((img, i) => {
+          img.style.animation = '';
+          img.style.animationDelay = `${BASE + i * STEP}s`;
+        });
+        // ボタンは立ち絵がすべて出そろった後に現れる
+        restartAnim(startBtn, `${BASE + LINEUP.length * STEP + 0.1}s`);
+      }
+
+      function showStart() {
+        startScreen.style.display = '';   // flex に戻す
+        startScreen.classList.remove('hide');
+        playIntro();
+      }
+
+      function hideStart() {
+        startScreen.classList.add('hide');
+        // フェードアウト後に DOM から外してビューワー操作を妨げないようにする
+        setTimeout(() => { startScreen.style.display = 'none'; }, 750);
+      }
+
+      playIntro();  // 初回表示
+      startBtn.addEventListener('click', hideStart);
+      homeBtn.addEventListener('click', () => {
+        // ビューワー側のポップアップを閉じてからホームへ戻す
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+        showStart();
+      });
+
+      // ----- 「このサイトについて」全画面オーバーレイ -----
+      const loreBtn = document.getElementById('btn-lore');
+      const loreScreen = document.getElementById('lore-screen');
+      const loreAnims = loreScreen.querySelectorAll('.lore-anim');
+      function openLore() {
+        loreScreen.classList.add('show');
+        loreScreen.setAttribute('aria-hidden', 'false');
+        loreScreen.scrollTop = 0;
+        // 開くたびに各行のフェードインを頭から再生（スタート画面と同じ演出）
+        loreAnims.forEach((el, i) => restartAnim(el, `${0.1 + i * 0.09}s`));
+      }
+      function closeLore() { loreScreen.classList.remove('show'); loreScreen.setAttribute('aria-hidden', 'true'); }
+      loreBtn.addEventListener('click', openLore);
+      loreScreen.querySelector('.lore-close').addEventListener('click', closeLore);
+      loreScreen.querySelector('.lore-ok').addEventListener('click', closeLore);
+      // Esc で閉じる（開いている時のみ）
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && loreScreen.classList.contains('show')) closeLore();
+      });
+
+      // ----- クレジット（ボタンで開閉） -----
+      const creditBtn = document.getElementById('btn-credit');
+      const creditPanel = document.getElementById('credit-panel');
+      creditBtn.addEventListener('click', () => {
+        const willOpen = creditPanel.hasAttribute('hidden');
+        creditPanel.toggleAttribute('hidden', !willOpen);
+        creditBtn.classList.toggle('active', willOpen);
+        creditBtn.setAttribute('aria-expanded', String(willOpen));
+      });
+    })();
+  </script>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three/three.module.js",
+      "three/addons/": "./vendor/three/addons/"
+    }
+  }
+  </script>
+
+  <script type="module" src="main.js"></script>
+
+</body>
+</html>

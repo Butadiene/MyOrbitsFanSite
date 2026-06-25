@@ -1,0 +1,14 @@
+Solar System Scope — Planetary Textures
+Source: https://www.solarsystemscope.com/textures/
+
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+
+Attribution: Solar System Scope (www.solarsystemscope.com)
+
+Files in this folder (textures/ssc/):
+  mercury.jpg, venus_surface.jpg, venus_atmosphere.jpg,
+  earth_day.jpg, earth_clouds.jpg, earth_normal.png,
+  earth_normal_source.tif (original normal map; not used by the web app),
+  mars.jpg, jupiter.jpg, saturn.jpg, saturn_ring.png,
+  uranus.jpg, neptune.jpg, moon.jpg, sun.jpg

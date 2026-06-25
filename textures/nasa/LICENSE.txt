@@ -1,0 +1,16 @@
+NASA — Planetary / Moon Maps
+Public Domain.
+
+NASA imagery is generally not copyrighted and may be used for any purpose
+without fee. See: https://www.nasa.gov/nasa-brand-center/images-and-media/
+
+Credit (appreciated, not legally required): NASA / JHUAPL / SwRI (Pluto, Charon),
+NASA / JPL (Galilean moons).
+
+Files in this folder (textures/nasa/):
+  pluto.jpg     - Pluto color mosaic (New Horizons), NASA/JHUAPL/SwRI
+  charon.jpg    - Charon topographic map, NASA/JHUAPL/SwRI (PIA19866)
+  io.webp       - Io
+  europa.webp   - Europa
+  ganymede.webp - Ganymede
+  callisto.webp - Callisto
