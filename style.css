@@ -17,7 +17,9 @@
   /* ヘッダー */
   #header {
     position: fixed;
-    top: 0; left: 0; right: 0;
+    top: 0; left: 0;
+    /* 右側の操作ボタンと住み分けるため、左半分までに収める（狭幅でも被らない） */
+    max-width: 50%;
     padding: 14px 20px;
     display: flex;
     flex-direction: column;
@@ -59,6 +61,10 @@
     display: flex;
     gap: 8px;
     z-index: 6;
+    /* 右半分に収め、狭くなったら下へ折り返す（左上のヘッダーに被らない） */
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: calc(50% - 24px);
   }
   #controls button {
     background: var(--panel-bg);
@@ -604,7 +610,7 @@
     border-bottom: 1px dotted rgba(108,197,255,0.6);
   }
   #lore-screen .lore-body a:hover { border-bottom-style: solid; }
-  /* 物語パートの見出し（Myorbits. 世界について）— 上に細い光の区切り線 */
+  /* 物語パートの見出し（MyOrbits. 世界について）— 上に細い光の区切り線 */
   #lore-screen .lore-body .lore-h {
     position: relative;
     margin: 40px 0 18px;
@@ -696,13 +702,15 @@
   /* ======================= スマホ・狭い画面向け ======================= */
   @media (max-width: 640px) {
     /* ヘッダー：タイトルを小さく、操作ヒント（マウス前提）は隠す */
-    #header { padding: calc(8px + env(safe-area-inset-top)) 12px 8px; gap: 8px; }
+    #header { padding: calc(8px + env(safe-area-inset-top)) 12px 8px; gap: 6px; max-width: none; }
     #header h1 { font-size: 15px; }
+    /* クレジット文は折り返すので、行高さを締めてヘッダーの高さを安定させる */
+    #header .header-fan { font-size: 11px; line-height: 1.35; }
     #header .hint { display: none; }
 
-    /* コントロール：ヘッダーの下に回り込ませ、折り返し可能にする */
+    /* コントロール：ヘッダー（クレジット文を含む）の下まで下げて重なりを防ぐ */
     #controls {
-      top: calc(42px + env(safe-area-inset-top));
+      top: calc(78px + env(safe-area-inset-top));
       right: calc(8px + env(safe-area-inset-right));
       left: auto;
       gap: 6px;

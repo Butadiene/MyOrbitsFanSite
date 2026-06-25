@@ -4,19 +4,19 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>My Orbits Fan Site</title>
-<meta name="description" content="@fy_fp7 さんのオリジナル創作「Myorbits.」非公式ファンサイト。Three.js 製の太陽系 3D ビューワーで、惑星をクリックするとイメージキャラクターと解説が見られます。" />
+<meta name="description" content="@fy_fp7 さんのオリジナル創作「MyOrbits.」非公式ファンサイト。Three.js 製の太陽系 3D ビューワーで、惑星をクリックするとイメージキャラクターと解説が見られます。" />
 <meta name="theme-color" content="#04060d" />
 <link rel="canonical" href="https://butadiene.github.io/Solar-simple-viewer/" />
 
-<!-- ファビコン（fy_fp7 氏提供の earth キャラクターを使用） -->
+<!-- ファビコン（fy_fp7 さん提供の earth キャラクターを使用） -->
 <link rel="icon" type="image/png" sizes="180x180" href="apple-touch-icon.png" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 
 <!-- OGP（X / Facebook 等の共有カード） -->
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="My Orbits Fan Site" />
-<meta property="og:title" content="My Orbits Fan Site｜@fy_fp7「Myorbits.」非公式ファンサイト" />
-<meta property="og:description" content="@fy_fp7 さんのオリジナル創作「Myorbits.」非公式ファンサイト。太陽系を 3D で巡り、惑星のキャラクターと世界観を楽しめます。" />
+<meta property="og:title" content="My Orbits Fan Site｜@fy_fp7「MyOrbits.」非公式ファンサイト" />
+<meta property="og:description" content="@fy_fp7 さんのオリジナル創作「MyOrbits.」非公式ファンサイト。太陽系を 3D で巡り、惑星のキャラクターと世界観を楽しめます。" />
 <meta property="og:url" content="https://butadiene.github.io/Solar-simple-viewer/" />
 <meta property="og:image" content="https://butadiene.github.io/Solar-simple-viewer/ogp.png" />
 <meta property="og:image:width" content="1200" />
@@ -25,8 +25,8 @@
 
 <!-- Twitter カード -->
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="My Orbits Fan Site｜@fy_fp7「Myorbits.」非公式ファンサイト" />
-<meta name="twitter:description" content="太陽系を 3D で巡り、惑星のキャラクターと世界観を楽しめる「Myorbits.」非公式ファンサイト。" />
+<meta name="twitter:title" content="My Orbits Fan Site｜@fy_fp7「MyOrbits.」非公式ファンサイト" />
+<meta name="twitter:description" content="太陽系を 3D で巡り、惑星のキャラクターと世界観を楽しめる「MyOrbits.」非公式ファンサイト。" />
 <meta name="twitter:image" content="https://butadiene.github.io/Solar-simple-viewer/ogp.png" />
 
 <!-- Pretendard JP（見出し・大きな名前表示に使用。失敗時は Noto Sans JP 等にフォールバック） -->
@@ -38,7 +38,7 @@
 
   <div id="header">
     <h1>🪐 My Orbits Fan Site</h1>
-    <p class="header-fan">@<a href="https://x.com/fy_fp7" target="_blank" rel="noopener">fy_fp7</a> さんのオリジナル創作「Myorbits.」非公式ファンサイト</p>
+    <p class="header-fan">@<a href="https://x.com/fy_fp7" target="_blank" rel="noopener">fy_fp7</a> さんのオリジナル創作「MyOrbits.」非公式ファンサイト</p>
     <span class="hint">ドラッグで回転 / ホイールでズーム / 惑星をクリックで詳細</span>
   </div>
 
@@ -88,7 +88,7 @@
         <br />
         カロン：Image credit: NASA/Johns Hopkins University Applied Physics Laboratory/Southwest Research Institute
         <br />
-        キャラクター（イラスト・原作）・サイトアイコン／OGP画像：&copy; <a href="https://lit.link/fyfp" target="_blank" rel="noopener">fy_fp7</a> ／原作者様のご厚意により当サイト限定で掲載。転載・再配布はご遠慮ください。
+        キャラクター（イラスト・原作）・サイトアイコン／OGP画像：&copy; <a href="https://lit.link/fyfp" target="_blank" rel="noopener">fy_fp7</a> ／原作者さんのご厚意により当サイト限定で掲載。転載・再配布はご遠慮ください。
         ／キャラクター説明文：<a href="https://x.com/yellow_tulip013" target="_blank" rel="noopener">yellow_tulip013</a>
         <br />
         ディレクション：<a href="https://x.com/yellow_tulip013" target="_blank" rel="noopener">yellow_tulip013</a>
@@ -136,17 +136,17 @@
 
   <div id="loading">太陽系を生成中…</div>
 
-  <!-- 「このサイトについて」（ファンサイトの説明＋Myorbits の世界設定）オーバーレイ -->
+  <!-- 「このサイトについて」（ファンサイトの説明＋MyOrbits. の世界設定）オーバーレイ -->
   <div id="lore-screen" aria-hidden="true">
     <div class="lore-card" role="dialog" aria-modal="true" aria-label="このサイトについて">
       <button class="lore-close" type="button" aria-label="閉じる">✕</button>
       <div class="lore-eyebrow lore-anim">このサイトについて</div>
       <div class="lore-body">
-        <p class="lore-anim">このサイトは <a href="https://x.com/fy_fp7" target="_blank" rel="noopener">@fy_fp7</a> 様のオリジナル創作「<em>Myorbits.</em>」のファンサイトです。</p>
+        <p class="lore-anim">このサイトは <a href="https://x.com/fy_fp7" target="_blank" rel="noopener">@fy_fp7</a> さんのオリジナル創作「<em>MyOrbits.</em>」のファンサイトです。</p>
         <p class="lore-anim">作品の紹介と応援を目的として、ファンが運営しています。</p>
-        <p class="lore-anim">掲載しているイラストは、原作者様ご本人のご厚意により、<em>当サイト限定で掲載許可</em>をいただいています。イラストおよび原作に関する権利は原作者様に帰属します。掲載イラストの転載・再配布はご遠慮ください。</p>
+        <p class="lore-anim">掲載しているイラストは、原作者さんご本人のご厚意により、<em>当サイト限定で掲載許可</em>をいただいています。イラストおよび原作に関する権利は原作者さんに帰属します。掲載イラストの転載・再配布はご遠慮ください。</p>
 
-        <h3 class="lore-h lore-anim">Myorbits. 世界について</h3>
+        <h3 class="lore-h lore-anim">MyOrbits. 世界について</h3>
         <p class="lore-anim">どこかの宇宙のどこかの銀河、どこかの太陽系で…<br />惑星たちが定例会議を始めます。</p>
         <p class="lore-anim">彼らが太陽から授けられた任務は、<em>「生命の発芽と保護」</em>。</p>
         <p class="lore-anim">40億年前に地球で芽吹いた生命を維持するため、惑星たちは広大な太陽系を漂う様々な天体を監視し、会議で報告しています。</p>
@@ -173,8 +173,8 @@
 
   <!-- スタートページ（ビューワー表示前） -->
   <div id="start-screen">
-    <h1 class="start-title">My Orbits</h1>
-    <p class="start-sub">@fy_fp7 さんのオリジナル創作「Myorbits.」非公式ファンサイト</p>
+    <h1 class="start-title">MyOrbits.</h1>
+    <p class="start-sub">@fy_fp7 さんのオリジナル創作「MyOrbits.」非公式ファンサイト</p>
     <div class="start-chars"></div>
     <button class="start-btn" type="button">ビューワーを表示</button>
   </div>
