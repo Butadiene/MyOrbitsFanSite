@@ -69,11 +69,18 @@
 
   <div id="tooltip"></div>
 
-  <!-- PC のみ：左側の大きな立ち絵＋名前（decor.js が制御。スマホでは非表示） -->
+  <!-- 左側の大きな立ち絵＋名前（decor.js が制御）。
+       PC: 解説ポップアップと同時に常時表示。
+       スマホ: 通常は非表示。「立ち絵モード」のときだけ全画面表示し、専用ボタンで解説に戻る。 -->
   <div id="decor" aria-hidden="true">
     <img id="tachie" alt="" />
     <div id="name-romaji" class="pretendard semibold"></div>
     <div id="name-kanji" class="pretendard black"></div>
+    <!-- スマホ専用：全画面立ち絵モードの操作（PCでは非表示） -->
+    <div id="decor-controls">
+      <button id="decor-info" type="button">解説を見る</button>
+      <button id="decor-close" type="button" aria-label="閉じる">✕</button>
+    </div>
   </div>
 
   <!-- 右下のツールバー：クレジット・速度を横並びに（パネルは各ボタンの上に開く） -->
@@ -131,7 +138,11 @@
         <p class="cd-quote"></p>
       </div>
     </div>
-    <button class="close-mobile" type="button">閉じる</button>
+    <!-- スマホ専用：下部のアクションバー（立ち絵モードへ切替／閉じる）。PCでは両ボタンとも非表示。 -->
+    <div class="popup-actions">
+      <button id="popup-char-btn" type="button">立ち絵を見る</button>
+      <button class="close-mobile" type="button">閉じる</button>
+    </div>
   </div>
 
   <div id="loading">太陽系を生成中…</div>

@@ -211,6 +211,8 @@
   #popup .close:hover { background: rgba(255,255,255,0.18); }
   /* スマホ用の「閉じる」ボタン（PCでは非表示。メディアクエリで表示する） */
   #popup .close-mobile { display: none; }
+  /* スマホ専用：解説 → 全画面立ち絵モードへの切替ボタン（PCでは非表示。PCは立ち絵が常時出る） */
+  #popup-char-btn { display: none; }
 
   /* 惑星選択時に左側へ大きく半透明で表示するキャラクター */
   /* Pretendard（大きな名前表示用フォント） */
@@ -274,6 +276,10 @@
   }
   #decor.show #name-romaji,
   #decor.show #name-kanji { transform: translateX(0); }
+
+  /* 立ち絵モードの操作ボタン（解説へ戻る / 閉じる）。
+     PC では立ち絵モードという概念が無いので非表示。スマホのメディアクエリで表示する。 */
+  #decor-controls { display: none; }
 
   /* ローディング */
   #loading {
@@ -739,29 +745,94 @@
     /* キャラ立ち絵はプレビュー高に追従させ、スマホでもしっかり見えるサイズに */
     #popup .char-img { height: clamp(196px, 35vh, 296px); max-width: 60%; }
     #popup .preview.has-photo .char-img { max-width: 52%; }
-    /* シート下部に固定される全幅の「閉じる」ボタン（本文スクロールの外なので常に見える） */
+    /* シート下部のアクションバー：左「立ち絵を見る」＋右「閉じる」を横並びに。
+       本文スクロールの外なので常に見える。 */
+    #popup .popup-actions {
+      display: flex;
+      flex: 0 0 auto;
+    }
+    /* 「閉じる」は狭く、右側に置く（左の主アクションを広く見せる） */
     #popup .close-mobile {
       display: block;
-      flex: 0 0 auto;
-      width: 100%;
+      flex: 0 0 38%;
       padding: 15px;
       padding-bottom: calc(15px + env(safe-area-inset-bottom));
       font-size: 15px;
       font-weight: 600;
       letter-spacing: 0.04em;
+      color: #cfe0f5;
+      background: rgba(255,255,255,0.04);
+      border: none;
+      border-top: 1px solid rgba(108,197,255,0.28);
+      border-left: 1px solid rgba(108,197,255,0.22);   /* 立ち絵を見る との仕切り */
+      cursor: pointer;
+    }
+    #popup .close-mobile:active { background: rgba(255,255,255,0.1); }
+    /* 下部ボタンがあるので、右上の小さな ✕ はスマホでは隠す */
+    #popup .close { display: none; }
+
+    /* スマホでは立ち絵を「立ち絵モード」のときだけ全画面表示する。
+       通常（解説モード）は非表示で、キャラ絵はポップアップのプレビューに出る。 */
+    #decor { display: none; }
+    body.char-mode #decor { display: block; }
+    /* 立ち絵モード中は 3D ビューワーの操作 UI を隠して、全画面の立ち絵に集中させる
+       （ヘッダー・操作ボタンと立ち絵モードのボタンが被るのも防ぐ） */
+    body.char-mode #header,
+    body.char-mode #controls,
+    body.char-mode #real-panel,
+    body.char-mode #tools { display: none; }
+
+    /* 解説 → 立ち絵：下部アクションバーの左側（広め・主アクション）。
+       本文スクロールの外なので常に見え、プレビューのキャラにも被らない。 */
+    #popup-char-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      flex: 1 1 auto;
+      padding: 15px;
+      padding-bottom: calc(15px + env(safe-area-inset-bottom));
+      font-size: 14px; font-weight: 600; letter-spacing: 0.03em;
       color: #eaf3ff;
       background: rgba(108,197,255,0.16);
       border: none;
       border-top: 1px solid rgba(108,197,255,0.28);
       cursor: pointer;
     }
-    #popup .close-mobile:active { background: rgba(108,197,255,0.28); }
-    /* 下部ボタンがあるので、右上の小さな ✕ はスマホでは隠す */
-    #popup .close { display: none; }
+    #popup-char-btn:active { background: rgba(108,197,255,0.28); }
 
-    /* 左の大きな立ち絵＋名前は下シートの裏に隠れてしまうので、スマホでは非表示。
-       （キャラ絵はポップアップ内のプレビューに出るので情報は失われない） */
-    #decor { display: none; }
+    /* 立ち絵モードの操作ボタン群（#decor は pointer-events:none なので個別に有効化） */
+    body.char-mode #decor-controls { display: block; }
+    /* 解説へ戻る：親指が届きやすい下中央に大きめのピルで配置 */
+    #decor-info {
+      position: fixed; z-index: 5;
+      left: 50%; transform: translateX(-50%);
+      bottom: calc(18px + env(safe-area-inset-bottom));
+      pointer-events: auto;
+      padding: 13px 26px;
+      font-size: 14px; font-weight: 600; letter-spacing: 0.03em;
+      color: #eaf3ff;
+      background: rgba(108,197,255,0.2);
+      border: 1px solid rgba(108,197,255,0.5);
+      border-radius: 999px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+      cursor: pointer;
+    }
+    #decor-info:active { background: rgba(108,197,255,0.32); }
+    /* 閉じる：右上の丸ボタン */
+    #decor-close {
+      position: fixed; z-index: 5;
+      right: calc(12px + env(safe-area-inset-right));
+      top: calc(10px + env(safe-area-inset-top));
+      pointer-events: auto;
+      width: 40px; height: 40px;
+      font-size: 18px; line-height: 1;
+      color: #cfe0f5;
+      background: rgba(16,24,40,0.6);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      backdrop-filter: blur(8px);
+      cursor: pointer;
+    }
+    #decor-close:active { background: rgba(255,255,255,0.16); }
 
     /* 右下ツールバー：画面端に寄せる。各パネルは画面幅に収める */
     #tools {

@@ -517,8 +517,8 @@
     const hitObj = pickSelectable(e);
     if (hitObj) {
       openPopup(hitObj.userData.planet);
-    } else if (popup.classList.contains('show')) {
-      // 何もないところをクリック（ドラッグではない）→ ポップアップを閉じてフォーカス解除
+    } else if (popup.classList.contains('show') || document.body.classList.contains('char-mode')) {
+      // 何もないところをクリック（ドラッグではない）→ 解説/立ち絵いずれのモードでも閉じてフォーカス解除
       focusTarget = null;
       activePlanet = null;
       updateMoonVisibility();
@@ -536,6 +536,32 @@
   const popupPreview = popup.querySelector('.preview');
   // キャラクター画像が無い（git管理外）場合は枠を畳んで通常表示に戻す
   popupChar.onerror = () => { popupChar.removeAttribute('src'); popupPreview.classList.remove('has-character', 'has-char-img'); };
+
+  // ----------------------------------------------------------------------
+  // スマホ専用：解説ポップアップ ⇄ 全画面立ち絵 のモード切替
+  //  ・PC は従来通り（立ち絵＋解説を同時表示）。
+  //  ・スマホは画面が狭く両方は被るので、解説モードと立ち絵モードを排他で切り替える。
+  //  ・惑星タップ時は必ず「解説モード」から始まる（初期表示）。
+  // ----------------------------------------------------------------------
+  const decorEl = document.getElementById('decor');
+  const mqMobile = window.matchMedia('(max-width: 640px)');
+  let currentPopupPlanet = null;   // いま表示中（切替対象）の天体
+
+  // 立ち絵モードへ：解説ポップアップを隠し、全画面の立ち絵＋名前アニメを出す
+  function enterCharMode() {
+    if (!mqMobile.matches || !currentPopupPlanet) return;
+    document.body.classList.add('char-mode');
+    if (decorEl) decorEl.setAttribute('aria-hidden', 'false');
+    popup.classList.remove('show');
+    showDecor(currentPopupPlanet);
+  }
+  // 解説モードへ：立ち絵を隠し、解説ポップアップを出す
+  function enterInfoMode() {
+    document.body.classList.remove('char-mode');
+    if (decorEl) decorEl.setAttribute('aria-hidden', 'true');
+    hideDecor();
+    if (currentPopupPlanet) popup.classList.add('show');
+  }
 
   // 惑星選択時の左側の大きな立ち絵＋名前表示（PC のみ）は decor.js が担当する。
 
@@ -610,8 +636,17 @@
     popupPreview.classList.toggle('has-character', !photoReady && charReady);
     popupPreview.classList.toggle('has-char-img', charReady);
 
-    // 左の大きな立ち絵＋名前（PCのみ・decor.js が表示/アニメを担当）
-    showDecor(p);
+    // 左の大きな立ち絵＋名前（decor.js が表示/アニメを担当）。
+    //  PC: 解説と同時に常時表示。
+    //  スマホ: 立ち絵は別モードなので開始時は隠し、必ず「解説モード」から始める。
+    currentPopupPlanet = p;
+    if (mqMobile.matches) {
+      document.body.classList.remove('char-mode');
+      if (decorEl) decorEl.setAttribute('aria-hidden', 'true');
+      hideDecor();
+    } else {
+      showDecor(p);
+    }
 
     popup.classList.add('show');
   }
@@ -757,11 +792,19 @@
     clearTimeout(swapTimer);
     openSeq++;            // デコード待ち中の fillPopup を無効化し、閉じた後の再表示を防ぐ
     shownKey = null;
+    currentPopupPlanet = null;
+    document.body.classList.remove('char-mode');   // スマホの立ち絵モードも解除
+    if (decorEl) decorEl.setAttribute('aria-hidden', 'true');
     popup.classList.remove('show');
     hideDecor();
   }
   popup.querySelector('.close').addEventListener('click', closePopup);
   popup.querySelector('.close-mobile').addEventListener('click', closePopup);  // スマホ用の閉じるボタン
+
+  // スマホ専用：モード切替ボタン（PCでは CSS で非表示なので押されない）
+  document.getElementById('popup-char-btn')?.addEventListener('click', enterCharMode);  // 解説 → 立ち絵
+  document.getElementById('decor-info')?.addEventListener('click', enterInfoMode);      // 立ち絵 → 解説
+  document.getElementById('decor-close')?.addEventListener('click', closePopup);        // 立ち絵モードを閉じる
 
   // 選択した惑星にカメラを寄せる
   let focusTarget = null;
