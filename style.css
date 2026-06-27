@@ -726,7 +726,10 @@
     }
     #controls button { padding: 6px 9px; font-size: 11px; border-radius: 7px; }
 
-    /* ポップアップ：画面下から せり上がる ボトムシートにする */
+    /* ポップアップ：画面下から せり上がる ボトムシートにする。
+       スマホでは backdrop-filter のぼかしを外す：動く 3D キャンバスの上を大きな面で
+       せり上がる間、毎フレームぼかし再計算が走ってもっさりする原因になるため。
+       （--panel-bg は 92% 不透明なので見た目はほぼ変わらない） */
     #popup {
       top: auto; bottom: 0; left: 0; right: 0;
       width: 100%; max-width: 100%;
@@ -735,6 +738,7 @@
       transform: translateY(110%);
       display: flex; flex-direction: column;
       transition: transform 0.42s cubic-bezier(.22,1,.36,1), opacity 0.3s;
+      backdrop-filter: none;
     }
     #popup.show { transform: translateY(0); }
     /* プレビュー（キャラ・惑星表示エリア）は大きめに。本文はスクロールするので余裕がある */
